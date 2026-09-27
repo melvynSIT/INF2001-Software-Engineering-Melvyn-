@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INF2001 Quiz — Weeks 1–5</title>
+<style>
+  :root{
+    --bg:#0f1117; --card:#1b1f2a; --card2:#232838; --text:#e8ebf2;
+    --muted:#9aa3b5; --accent:#e63946; --accent2:#4361ee;
+    --green:#2fbf71; --greenbg:#12331f; --red:#ff5c6c; --redbg:#3a1720;
+    --border:#2c3143;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    background:var(--bg);color:var(--text);line-height:1.5;padding:24px 12px 80px}
+  .wrap{max-width:820px;margin:0 auto}
+  header{text-align:center;margin-bottom:16px}
+  h1{margin:0 0 4px;font-size:1.6rem}
+  .sub{color:var(--muted);font-size:.95rem}
+  .bar{position:sticky;top:0;z-index:20;background:var(--card);border:1px solid var(--border);
+    border-radius:12px;padding:12px 16px;margin:16px 0;display:flex;
+    justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+  .score{font-weight:700}
+  .btn{background:var(--accent2);color:#fff;border:none;padding:9px 16px;border-radius:8px;
+    font-size:.9rem;cursor:pointer;font-weight:600}
+  .btn:hover{filter:brightness(1.1)}
+  .btn.secondary{background:var(--card2);border:1px solid var(--border)}
+  .q{background:var(--card);border:1px solid var(--border);border-radius:14px;
+    padding:18px 20px;margin-bottom:18px}
+  .qhead{display:flex;gap:10px;align-items:flex-start;margin-bottom:6px}
+  .qnum{background:var(--accent);color:#fff;border-radius:6px;padding:2px 9px;
+    font-weight:700;font-size:.8rem;white-space:nowrap;margin-top:2px}
+  .qtext{font-weight:600}
+  .tag{font-size:.72rem;color:var(--muted);border:1px solid var(--border);
+    border-radius:20px;padding:1px 9px;margin-left:auto;white-space:nowrap}
+  .multi-note{font-size:.78rem;color:var(--accent2);margin:4px 0 10px;font-weight:600}
+  .opt{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--border);
+    border-radius:9px;padding:10px 12px;margin:7px 0;cursor:pointer;
+    background:var(--card2);transition:.12s}
+  .opt:hover{border-color:var(--accent2)}
+  .opt.selected{border-color:var(--accent2);background:#1c2540}
+  .opt.correct{border-color:var(--green);background:var(--greenbg)}
+  .opt.wrong{border-color:var(--red);background:var(--redbg)}
+  .box{width:20px;height:20px;border:2px solid var(--muted);flex:none;margin-top:1px;
+    display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700}
+  .single .box{border-radius:50%}
+  .multi .box{border-radius:5px}
+  .opt.selected .box{border-color:var(--accent2);color:var(--accent2)}
+  .opt.correct .box{border-color:var(--green);color:var(--green)}
+  .opt.wrong .box{border-color:var(--red);color:var(--red)}
+  .actions{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+  .feedback{margin-top:12px;padding:11px 14px;border-radius:9px;font-size:.9rem;display:none}
+  .feedback.show{display:block}
+  .feedback.ok{background:var(--greenbg);border:1px solid var(--green)}
+  .feedback.no{background:var(--redbg);border:1px solid var(--red)}
+  .feedback b{display:block;margin-bottom:3px}
+  footer{text-align:center;color:var(--muted);font-size:.8rem;margin-top:20px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>INF2001 — Introduction to Software Engineering</h1>
+    <div class="sub">Self-marking practice quiz · Weeks 1–5 · 53 questions (single &amp; multi-select)</div>
+  </header>
+
+  <div class="bar">
+    <div class="score">Score: <span id="score">0</span> / <span id="total">0</span> answered</div>
+    <div style="display:flex;gap:10px">
+      <button class="btn secondary" id="revealAll">Reveal all answers</button>
+      <button class="btn secondary" id="reset">Reset</button>
+    </div>
+  </div>
+
+  <div id="quiz"></div>
+
+  <footer>Tip: single-answer questions have round buttons; multi-select have square boxes (pick all that apply). Click <b>Check answer</b> for each.</footer>
+</div>
+
+<script>
+/* Each question:
+   type: "single" or "multi"
+   options: array of strings
+   correct: array of indexes that are correct
+   explain: explanation string
+*/
+const QUESTIONS = [
+  // ---------- WEEK 1: SE, SDLC, models ----------
+  {w:"Week 1", type:"single",
+   q:"According to the IEEE definition, software engineering is the application of a systematic, disciplined, quantifiable approach to the development, operation and maintenance of software. What does this definition emphasise?",
+   options:["Only writing efficient code","That it is essentially just programming","A structured, measurable engineering discipline — not just coding","Using the newest technology available"],
+   correct:[2],
+   explain:"The IEEE definition stresses a systematic, disciplined, quantifiable approach. The notes repeatedly highlight 'It's not just coding!'"},
+
+  {w:"Week 1", type:"multi",
+   q:"Which of the following were among the MAJOR complaints about software in 1968 (the origin of 'software engineering')? Select ALL that apply.",
+   options:["Projects running over-time","Projects running over-budget","Software was always delivered early","Software often did not meet requirements","Software was of low quality"],
+   correct:[0,1,3,4],
+   explain:"1968 complaints: over-time, over-budget, unmanageable/hard to maintain, low quality, inefficient, didn't meet requirements, sometimes never delivered. 'Delivered early' was never a complaint."},
+
+  {w:"Week 1", type:"single",
+   q:"In the phase cost approximation shown in the notes, roughly what percentage of total software cost is attributed to maintenance?",
+   options:["7%","33%","50%","67%"],
+   correct:[3],
+   explain:"Maintenance constitutes about 67% of total cost — which is why we design with maintenance in mind."},
+
+  {w:"Week 1", type:"single",
+   q:"Reducing post-delivery maintenance cost by 10% yields approximately what reduction in overall project cost?",
+   options:["At most 2%","6–7%","Exactly 10%","No measurable reduction"],
+   correct:[1],
+   explain:"Because maintenance dominates cost, a 10% maintenance reduction gives a 6–7% overall reduction, whereas a 10% coding reduction gives at most 2%."},
+
+  {w:"Week 1", type:"multi",
+   q:"Which of the following are the three main categories of post-delivery maintenance mentioned in the notes? Select ALL that apply.",
+   options:["Corrective maintenance","Perfective maintenance","Predictive maintenance","Adaptive maintenance"],
+   correct:[0,1,3],
+   explain:"Corrective (~20%), Perfective (~60%) and Adaptive (~20%) — the enhancement types are perfective and adaptive. 'Predictive' is not one of them."},
+
+  {w:"Week 1", type:"single",
+   q:"What is a defining characteristic of the Waterfall life-cycle model?",
+   options:["Frequent incremental delivery every few weeks","Sequential, distinct phases where one completes before the next begins","Continuous customer involvement in every iteration","No documentation is produced"],
+   correct:[1],
+   explain:"Waterfall (Royce, 1970) is sequential and document-driven with distinct phases and Big Design Up Front (BDUF)."},
+
+  {w:"Week 1", type:"multi",
+   q:"Which situations are GOOD candidates for using the Waterfall model? Select ALL that apply.",
+   options:["Requirements are very well known and understood","Technology is new and the team doesn't know it","Small and simple projects","New idea that has never been done before","Low-risk in-house projects"],
+   correct:[0,2,4],
+   explain:"Waterfall suits well-understood requirements/technology, small/simple, low-risk in-house and heavily regulated projects. New tech and brand-new ideas are when NOT to use it."},
+
+  {w:"Week 1", type:"single",
+   q:"A key rule of the Rapid Prototyping model is that the prototype may replace the specification phase, but should NEVER replace which phase?",
+   options:["The design phase","The testing phase","The requirements phase","The deployment phase"],
+   correct:[0],
+   explain:"Rapid prototyping may replace the specification phase — but never the design phase. Also: do not turn the prototype into the product."},
+
+  {w:"Week 1", type:"single",
+   q:"Which model places a strong emphasis on RISK ANALYSIS in every iteration, with the radius representing accumulated cost?",
+   options:["Waterfall","Rapid Prototyping","Spiral model","Rational Unified Process"],
+   correct:[2],
+   explain:"The Spiral model (Boehm) combines planning and documentation with prototyping in iterations and emphasises risk analysis; the radius reflects accumulated cost."},
+
+  {w:"Week 1", type:"multi",
+   q:"Which are the four phases (business contexts) of the Rational Unified Process (RUP)? Select ALL that apply.",
+   options:["Inception","Elaboration","Construction","Verification","Transition"],
+   correct:[0,1,2,4],
+   explain:"RUP phases: Inception, Elaboration, Construction, Transition. 'Verification' is not a RUP phase."},
+
+  {w:"Week 1", type:"multi",
+   q:"According to the Agile Manifesto, Agile VALUES which items MORE (the items on the left)? Select ALL that apply.",
+   options:["Individuals and interactions (over processes and tools)","Comprehensive documentation (over working software)","Working software (over comprehensive documentation)","Customer collaboration (over contract negotiation)","Responding to change (over following a plan)"],
+   correct:[0,2,3,4],
+   explain:"Agile values individuals/interactions, working software, customer collaboration, and responding to change more. Comprehensive documentation is on the right (valued less)."},
+
+  {w:"Week 1", type:"single",
+   q:"Which phrase best captures an Agile principle regarding scope and time?",
+   options:["Fixed features, flexible time","Fixed time, not fixed features (work may be 'descoped')","Both time and features are fixed","Neither time nor features matter"],
+   correct:[1],
+   explain:"Agile processes demand FIXED TIME, not fixed features — if a task can't fit in the timebox, work may be reduced ('descoped')."},
+
+  // ---------- WEEK 2: Requirements engineering ----------
+  {w:"Week 2", type:"single",
+   q:"What is the 'moving target' problem in requirements?",
+   options:["Developers keep changing programming languages","Requirements change while the product is being developed","The client is never available","Testing takes too long"],
+   correct:[1],
+   explain:"The moving-target problem is a change in requirements during development, which can cause regression faults and even force redesign."},
+
+  {w:"Week 2", type:"multi",
+   q:"Which of the following are the four activities of Requirements Engineering? Select ALL that apply.",
+   options:["Elicitation","Analysis","Validation","Compilation","Management"],
+   correct:[0,1,2,4],
+   explain:"The four activities are Elicitation, Analysis, Validation and Management. 'Compilation' is not one."},
+
+  {w:"Week 2", type:"single",
+   q:"Requirements Elicitation differs from mere 'gathering' because it focuses on...",
+   options:["What the user wants only","How it will be technically built","What the user NEEDS, not just wants (an ethical duty)","Writing code as early as possible"],
+   correct:[2],
+   explain:"Elicitation focuses on what the user NEEDS (an ethical duty) and on the problem, not the technical solution."},
+
+  {w:"Week 2", type:"multi",
+   q:"Which of the following are recognised requirements-discovery methods listed in the notes? Select ALL that apply.",
+   options:["Interviews","Focus groups","Observation","Prototyping","Reverse engineering the competitor's code"],
+   correct:[0,1,2,3],
+   explain:"Methods include interviews, focus groups, documents, observation, prototyping, questionnaires and scenarios. Reverse-engineering a competitor's code is not listed."},
+
+  {w:"Week 2", type:"single",
+   q:"The observation risk where people alter their behaviour because they know they are being watched is called the...",
+   options:["Groupthink effect","Hawthorne effect","Halo effect","Placebo effect"],
+   correct:[1],
+   explain:"The Hawthorne effect — stakeholders may behave differently when observed."},
+
+  {w:"Week 2", type:"single",
+   q:"Which risk is MOST associated with focus groups specifically?",
+   options:["Low response rate","Groupthink / dominant voices overshadowing others","No chance for clarification","Documents being outdated"],
+   correct:[1],
+   explain:"Focus groups risk groupthink and strong personalities dominating; a skilled moderator is needed."},
+
+  {w:"Week 2", type:"single",
+   q:"Functional requirements describe the ______, while non-functional requirements describe ______.",
+   options:["'how well'; the 'what'","'what' (tasks/actions); the 'how well' (quality attributes/constraints)","cost; schedule","hardware; software"],
+   correct:[1],
+   explain:"Functional = 'what' the system must do (actions/tasks). Non-functional = 'how well' (quality attributes and design constraints)."},
+
+  {w:"Week 2", type:"multi",
+   q:"Which of the following are NON-functional requirement examples/categories from the notes? Select ALL that apply.",
+   options:["Product requirements (e.g., performance, reliability, security)","Organisational requirements (operational/development process)","External requirements (regulatory, legislative, ethical)","A requirement that a user can search the appointment list"],
+   correct:[0,1,2],
+   explain:"Non-functional splits into product, organisational and external requirements. Being able to search the appointment list is a FUNCTIONAL requirement."},
+
+  {w:"Week 2", type:"multi",
+   q:"According to 'What makes a requirement good?', which qualities should a good requirement have? Select ALL that apply.",
+   options:["Verifiable","Ambiguous","Traceable","Consistent","Implementation-free"],
+   correct:[0,2,3,4],
+   explain:"Good requirements are verifiable, clear/concise, traceable, viable, consistent, implementation-free and complete. 'Ambiguous' is the opposite of good."},
+
+  {w:"Week 2", type:"single",
+   q:"In MoSCoW prioritisation, the four categories are Must-have, Should-have, Could-have and...",
+   options:["Would-have","Will-not-have (this time)","May-have","Might-have"],
+   correct:[1],
+   explain:"MoSCoW = Must, Should, Could, Will-not-have."},
+
+  {w:"Week 2", type:"multi",
+   q:"Which of the following are formats used to specify requirements according to the notes? Select ALL that apply.",
+   options:["Natural language","Structured natural language","Mathematical (formal) specifications","Graphical notations","Binary machine code"],
+   correct:[0,1,2,3],
+   explain:"The four specification formats are: natural language, structured natural language, mathematical/formal, and graphical notations."},
+
+  {w:"Week 2", type:"single",
+   q:"A key DISADVANTAGE of formal (mathematical) specifications is that...",
+   options:["They are always ambiguous","Most customers cannot understand them, and they need experts/more time","They cannot be checked","They are only text"],
+   correct:[1],
+   explain:"Formal specs reduce ambiguity but require experts, take more time, and customers usually can't understand or accept them as a contract."},
+
+  {w:"Week 2", type:"single",
+   q:"Requirements Validation primarily answers which question?",
+   options:["Are we building the product right (correctly)?","Are we building the RIGHT product?","How much will it cost?","Which language should we use?"],
+   correct:[1],
+   explain:"Validation asks 'Are we building the RIGHT product?' — checking validity, consistency, verifiability, realism and completeness."},
+
+  // ---------- WEEK 3: Use cases, activity diagrams ----------
+  {w:"Week 3", type:"single",
+   q:"A use case primarily focuses on which type of requirement?",
+   options:["Non-functional requirements","Functional requirements (what the system should do)","Hardware requirements","Budget requirements"],
+   correct:[1],
+   explain:"Use cases focus on functional requirements — how an actor interacts with the system to achieve a goal."},
+
+  {w:"Week 3", type:"single",
+   q:"In use case terminology, which actor INITIATES the interaction to achieve a goal?",
+   options:["Supporting actor","Primary actor","Secondary system","Passive actor"],
+   correct:[1],
+   explain:"The primary actor initiates the interaction; a supporting actor performs sub-goals (e.g., a banking database queried by the ATM)."},
+
+  {w:"Week 3", type:"single",
+   q:"In the exercise 'which requirements should be represented directly in a use case?' (e.g., 'Database response time < 2 seconds', 'uptime 99.8%'), the correct answer was:",
+   options:["All of them","Only the response time one","NONE — they are all non-functional","Only the uptime one"],
+   correct:[2],
+   explain:"NONE — those are all non-functional requirements, so they don't belong directly in a use case."},
+
+  {w:"Week 3", type:"single",
+   q:"The <<include>> stereotype in a use case diagram represents a relationship that is...",
+   options:["Optional, only under certain conditions","Mandatory — the base use case always integrates the included behaviour","Only used between actors","A generalisation of actors"],
+   correct:[1],
+   explain:"<<include>> is mandatory: whenever the base use case runs, the included use case always executes (e.g., Check Balance always includes Validate PIN)."},
+
+  {w:"Week 3", type:"single",
+   q:"The <<extend>> stereotype represents a relationship that is...",
+   options:["Always mandatory","Optional — the extending use case adds behaviour only under specific conditions","The same as inheritance","Only for supporting actors"],
+   correct:[1],
+   explain:"<<extend>> is optional/conditional; the extending use case inserts behaviour into the base use case only under certain conditions (note the arrow points to the base)."},
+
+  {w:"Week 3", type:"multi",
+   q:"According to the notes, a GOOD use case should... Select ALL that apply.",
+   options:["Focus on interaction (start with a request, end with the answers)","Describe internal system activities in detail","Describe the GUI in detail","Be concise, clear and accessible to non-programmers","Focus on essential behaviours from the actor's point of view"],
+   correct:[0,3,4],
+   explain:"A good use case focuses on interaction and essential behaviours, is concise/clear for non-programmers. It does NOT describe internal system activities or the GUI in detail."},
+
+  {w:"Week 3", type:"single",
+   q:"An activity diagram is MOST useful for modelling...",
+   options:["Static class structure","The workflow / synchronous behaviour of a process (with forks, joins, branches)","Database schema","Network topology"],
+   correct:[1],
+   explain:"Activity diagrams describe workflow behaviour — decisions, iterations and parallel/random behaviour — using start/end, activities, decisions, forks and joins."},
+
+  {w:"Week 3", type:"multi",
+   q:"In an activity diagram, which statements about fork and join are correct? Select ALL that apply.",
+   options:["A fork splits flow into parallel activities","A join synchronises parallel flows","A decision (diamond) is used for parallel processing","Fork and join are represented by thick bars"],
+   correct:[0,1,3],
+   explain:"Fork splits into parallel flows; join synchronises them; both are thick bars. A diamond is a DECISION (conditional), not for parallelism."},
+
+  {w:"Week 3", type:"single",
+   q:"A stated DISADVANTAGE of activity diagrams is that they...",
+   options:["Cannot show decisions","Do not explicitly show which objects execute which activities or how messaging works","Cannot show the start state","Are only useful after coding is complete"],
+   correct:[1],
+   explain:"Activity diagrams don't explicitly present which objects perform which activities or how messages pass between them."},
+
+  // ---------- WEEK 4: OOP, class & sequence diagrams ----------
+  {w:"Week 4", type:"single",
+   q:"In UML class notation, what does the '-' visibility symbol mean?",
+   options:["Public","Private","Protected","Package-private"],
+   correct:[1],
+   explain:"'-' = private, '+' = public, '#' = protected. Private members are only accessible within the owning class."},
+
+  {w:"Week 4", type:"multi",
+   q:"Which of the following are principles of Object-Oriented Design covered in the notes? Select ALL that apply.",
+   options:["Encapsulation","Information hiding","Inheritance","Polymorphism","Recursion"],
+   correct:[0,1,2,3],
+   explain:"The four OO design principles shown: Encapsulation, Information hiding (HIDE) and Inheritance, Polymorphism (EXTEND). Recursion is not one of them."},
+
+  {w:"Week 4", type:"single",
+   q:"Polymorphism enables what, according to the notes?",
+   options:["Reuse of higher-level class specifications","Multiple implementations to handle the same message in different ways, transparently to the client","Hiding of internal state","Grouping data and functions together"],
+   correct:[1],
+   explain:"Polymorphism lets multiple implementations respond to the same message differently, transparently to the client (e.g., speak() → meow/woof/quack). Inheritance is about reuse."},
+
+  {w:"Week 4", type:"single",
+   q:"In the Use-Case-to-Class 4-step method, what is done in Step 2?",
+   options:["Write a solution abstract","Filter the raw list of NOUNS to extract entity classes","Determine attributes and services","Derive relationships"],
+   correct:[1],
+   explain:"Step 1: solution abstract. Step 2: identify/filter nouns → entity classes. Step 3: attributes & services. Step 4: relationships."},
+
+  {w:"Week 4", type:"single",
+   q:"When you find an 'is-a' relationship between entities, which OO mechanism should you typically use?",
+   options:["Composition","Inheritance","Encapsulation","Association only"],
+   correct:[1],
+   explain:"An 'is-a' relationship (e.g., Duck is-a Animal) indicates inheritance — the subclass inherits the superclass's properties and behaviours."},
+
+  {w:"Week 4", type:"single",
+   q:"In a sequence diagram, the VERTICAL axis represents what?",
+   options:["Which participant is acting","Time (going down = forward in time)","Cost","Number of messages"],
+   correct:[1],
+   explain:"Vertical = time (downward is forward in time); horizontal = which participant is acting."},
+
+  {w:"Week 4", type:"multi",
+   q:"Which are valid frame/operator types used to show selection and loops in a sequence diagram? Select ALL that apply.",
+   options:["opt (if)","alt (if/else)","loop","fork"],
+   correct:[0,1,2],
+   explain:"Frames: opt (if), alt (if/else, separated by a dashed line) and loop. 'fork' belongs to activity diagrams, not sequence-diagram frames."},
+
+  {w:"Week 4", type:"single",
+   q:"In a sequence diagram, how is a RETURN from a message typically shown?",
+   options:["A solid arrow","A dashed arrow back","A thick bar","An X on the lifeline"],
+   correct:[1],
+   explain:"A dashed arrow back indicates a return. An X at the bottom of a lifeline indicates object deletion; a thick bar is an activation."},
+
+  // ---------- WEEK 5: Project management & estimation ----------
+  {w:"Week 5", type:"single",
+   q:"Per PMBOK, a project is best defined as...",
+   options:["An ongoing operation with no end","A temporary endeavour undertaken to create a unique product, service or result","Any coding activity","A permanent department"],
+   correct:[1],
+   explain:"PMBOK: a project is a TEMPORARY endeavour to create a UNIQUE product, service or result."},
+
+  {w:"Week 5", type:"single",
+   q:"A Work Breakdown Structure (WBS) is best described as a...",
+   options:["Flat list of random tasks","Deliverable-oriented hierarchical decomposition of the work","Sequence diagram of code","Budget spreadsheet only"],
+   correct:[1],
+   explain:"A WBS is a deliverable-oriented hierarchical decomposition of the work needed to achieve project objectives."},
+
+  {w:"Week 5", type:"single",
+   q:"The 'Cone of Uncertainty' illustrates that cost/effort estimates...",
+   options:["Get less accurate over time","Become more accurate as the project progresses through its phases","Are always exact","Don't change after requirements"],
+   correct:[1],
+   explain:"The cone narrows over time — estimates made later (e.g., after analysis) have a tighter range than those made during early requirements."},
+
+  {w:"Week 5", type:"multi",
+   q:"Which of the following are basic software SIZE metrics mentioned in the notes? Select ALL that apply.",
+   options:["Function Points (FP)","Use Case Points (UCP)","Lines of Code (LOC)","Gigabytes of RAM"],
+   correct:[0,1,2],
+   explain:"Size is usually measured in Function Points, Use Case Points, or Lines of Code. RAM is not a size metric here."},
+
+  {w:"Week 5", type:"single",
+   q:"In Function Point analysis, the Technical Complexity Factor (TCF) is calculated as TCF = 0.65 + 0.01 × DI. If the total Degree of Influence is 27, TCF equals:",
+   options:["0.65","0.92","1.27","27"],
+   correct:[1],
+   explain:"TCF = 0.65 + 0.01 × 27 = 0.65 + 0.27 = 0.92."},
+
+  {w:"Week 5", type:"single",
+   q:"The final Function Points formula is FP = UFP × TCF. If UFP = 50 and TCF = 0.92, then FP ≈",
+   options:["50","42","46","58"],
+   correct:[2],
+   explain:"FP = 50 × 0.92 = 46."},
+
+  {w:"Week 5", type:"single",
+   q:"In Use Case Points, a use case with 7 transactions is classified as what complexity (giving weight 10)?",
+   options:["Simple (≤3)","Average (4 to 7)","Complex (>7)","Trivial"],
+   correct:[1],
+   explain:"4–7 transactions = Average complexity, weight 10. ≤3 = Simple (5); >7 = Complex (15)."},
+
+  {w:"Week 5", type:"single",
+   q:"A 'transaction' in Use Case Points is best described as...",
+   options:["Each individual numbered step","A round-trip from User to System to User","A database commit","A single method call"],
+   correct:[1],
+   explain:"A transaction is a round-trip from User → System → User (not necessarily one step). If user interaction is missing, System→User can count as one."},
+
+  {w:"Week 5", type:"single",
+   q:"COCOMO is a cost estimation model whose MAJOR input parameter is...",
+   options:["Number of meetings","Size (e.g., LOC or UCP)","Team salary","Programming language only"],
+   correct:[1],
+   explain:"COCOMO (Boehm, 1981) uses SIZE as the major input and empirically derived formulas to predict effort (in person-months/hours)."},
+
+  {w:"Week 5", type:"single",
+   q:"Using the simple task-duration model D = (OD + 4×ED + PD) / 6, if Optimistic=2, Expected=5, Pessimistic=14, then D equals:",
+   options:["5","6","7","4"],
+   correct:[1],
+   explain:"D = (2 + 4×5 + 14) / 6 = (2 + 20 + 14)/6 = 36/6 = 6."},
+
+  {w:"Week 5", type:"single",
+   q:"A stated LIMITATION of using Lines of Code (LOC) for estimation is that...",
+   options:["It is always perfectly accurate early","Different languages give different lengths, and LOC is only truly known when the product is done","It measures requirements effort directly","It counts only comments"],
+   correct:[1],
+   explain:"LOC is problematic: source code is a small part of total effort, languages differ, it's unclear what to count, and LOC is accurately known only when finished."}
+];
+
+const quizEl = document.getElementById('quiz');
+const scoreEl = document.getElementById('score');
+const totalEl = document.getElementById('total');
+const state = QUESTIONS.map(()=>({selected:new Set(), checked:false, gotIt:false}));
+
+function render(){
+  quizEl.innerHTML='';
+  QUESTIONS.forEach((Q,qi)=>{
+    const card=document.createElement('div');
+    card.className='q';
+    const multi = Q.type==='multi';
+    card.innerHTML =
+      `<div class="qhead">
+         <span class="qnum">Q${qi+1}</span>
+         <span class="qtext">${Q.q}</span>
+         <span class="tag">${Q.w}</span>
+       </div>
+       ${multi?'<div class="multi-note">◻ Multiple answers — select ALL that apply</div>':''}`;
+    const optsWrap=document.createElement('div');
+    optsWrap.className = multi?'multi':'single';
+    Q.options.forEach((opt,oi)=>{
+      const o=document.createElement('div');
+      o.className='opt';
+      o.innerHTML=`<span class="box"></span><span>${opt}</span>`;
+      o.onclick=()=>{
+        if(state[qi].checked) return;
+        const s=state[qi].selected;
+        if(multi){ s.has(oi)?s.delete(oi):s.add(oi); }
+        else { s.clear(); s.add(oi); }
+        paintSelection(qi);
+      };
+      optsWrap.appendChild(o);
+    });
+    card.appendChild(optsWrap);
+
+    const actions=document.createElement('div');
+    actions.className='actions';
+    const checkBtn=document.createElement('button');
+    checkBtn.className='btn'; checkBtn.textContent='Check answer';
+    checkBtn.onclick=()=>checkAnswer(qi);
+    actions.appendChild(checkBtn);
+    card.appendChild(actions);
+
+    const fb=document.createElement('div');
+    fb.className='feedback';
+    fb.id='fb-'+qi;
+    card.appendChild(fb);
+
+    quizEl.appendChild(card);
+  });
+  totalEl.textContent=QUESTIONS.length;
+  updateScore();
+}
+
+function paintSelection(qi){
+  const card=quizEl.children[qi];
+  const opts=card.querySelectorAll('.opt');
+  opts.forEach((o,oi)=>{
+    o.classList.toggle('selected', state[qi].selected.has(oi));
+  });
+}
+
+function arraysEqualSet(set, arr){
+  if(set.size!==arr.length) return false;
+  return arr.every(x=>set.has(x));
+}
+
+function checkAnswer(qi){
+  const Q=QUESTIONS[qi];
+  const st=state[qi];
+  if(st.selected.size===0){ return; }
+  st.checked=true;
+  const correctSet=new Set(Q.correct);
+  const card=quizEl.children[qi];
+  const opts=card.querySelectorAll('.opt');
+  opts.forEach((o,oi)=>{
+    o.classList.remove('selected');
+    if(correctSet.has(oi)) o.classList.add('correct');
+    else if(st.selected.has(oi)) o.classList.add('wrong');
+    o.querySelector('.box').textContent =
+      correctSet.has(oi)?'✓':(st.selected.has(oi)?'✗':'');
+  });
+  const gotIt=arraysEqualSet(st.selected, Q.correct);
+  st.gotIt=gotIt;
+  card.querySelector('.btn').disabled=true;
+  const fb=document.getElementById('fb-'+qi);
+  fb.className='feedback show '+(gotIt?'ok':'no');
+  fb.innerHTML=`<b>${gotIt?'✅ Correct!':'❌ Not quite.'}</b>${Q.explain}`;
+  updateScore();
+}
+
+function updateScore(){
+  const answered=state.filter(s=>s.checked).length;
+  const right=state.filter(s=>s.gotIt).length;
+  scoreEl.textContent=right+' correct · '+answered;
+}
+
+document.getElementById('revealAll').onclick=()=>{
+  QUESTIONS.forEach((Q,qi)=>{
+    if(!state[qi].checked){
+      state[qi].selected=new Set(Q.correct);
+      checkAnswer(qi);
+    }
+  });
+};
+document.getElementById('reset').onclick=()=>{
+  state.forEach(s=>{s.selected=new Set();s.checked=false;s.gotIt=false;});
+  render();
+  window.scrollTo({top:0,behavior:'smooth'});
+};
+
+render();
+</script>
+</body>
+</html>
