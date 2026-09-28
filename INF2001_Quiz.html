@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INF2001 Quiz — Weeks 1–5</title>
+<style>
+  :root{
+    --bg:#0f1117; --card:#1b1f2a; --card2:#232838; --text:#e8ebf2;
+    --muted:#9aa3b5; --accent:#e63946; --accent2:#4361ee;
+    --green:#2fbf71; --greenbg:#12331f; --red:#ff5c6c; --redbg:#3a1720;
+    --amber:#f4a261; --amberbg:#33270f; --border:#2c3143;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    background:var(--bg);color:var(--text);line-height:1.5;padding:24px 12px 80px}
+  .wrap{max-width:840px;margin:0 auto}
+  header{text-align:center;margin-bottom:16px}
+  h1{margin:0 0 4px;font-size:1.55rem}
+  .sub{color:var(--muted);font-size:.95rem}
+  .legend{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:10px;font-size:.78rem;color:var(--muted)}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .dot{width:10px;height:10px;border-radius:50%}
+  .bar{position:sticky;top:0;z-index:20;background:var(--card);border:1px solid var(--border);
+    border-radius:12px;padding:12px 16px;margin:16px 0;display:flex;
+    justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+  .score{font-weight:700;font-size:.9rem}
+  .btn{background:var(--accent2);color:#fff;border:none;padding:9px 16px;border-radius:8px;
+    font-size:.9rem;cursor:pointer;font-weight:600}
+  .btn:hover{filter:brightness(1.1)}
+  .btn:disabled{opacity:.5;cursor:default}
+  .btn.secondary{background:var(--card2);border:1px solid var(--border)}
+  .q{background:var(--card);border:1px solid var(--border);border-radius:14px;
+    padding:18px 20px;margin-bottom:18px}
+  .qhead{display:flex;gap:10px;align-items:flex-start;margin-bottom:6px;flex-wrap:wrap}
+  .qnum{color:#fff;border-radius:6px;padding:2px 9px;font-weight:700;font-size:.8rem;white-space:nowrap;margin-top:2px}
+  .qnum.mcq{background:var(--accent2)}
+  .qnum.short{background:var(--amber);color:#1a1206}
+  .qnum.open{background:#7b5ea7}
+  .qtext{font-weight:600;flex:1;min-width:200px}
+  .tag{font-size:.72rem;color:var(--muted);border:1px solid var(--border);
+    border-radius:20px;padding:1px 9px;white-space:nowrap;align-self:flex-start;margin-top:2px}
+  .typebadge{font-size:.68rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+    padding:2px 8px;border-radius:20px;margin-top:2px}
+  .typebadge.mcq{background:#1c2540;color:#8fa6ff}
+  .typebadge.short{background:#33270f;color:#f4a261}
+  .typebadge.open{background:#2a2140;color:#b79fe0}
+  .multi-note{font-size:.78rem;color:var(--accent2);margin:4px 0 10px;font-weight:600}
+  .opt{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--border);
+    border-radius:9px;padding:10px 12px;margin:7px 0;cursor:pointer;background:var(--card2);transition:.12s}
+  .opt:hover{border-color:var(--accent2)}
+  .opt.selected{border-color:var(--accent2);background:#1c2540}
+  .opt.correct{border-color:var(--green);background:var(--greenbg)}
+  .opt.wrong{border-color:var(--red);background:var(--redbg)}
+  .box{width:20px;height:20px;border:2px solid var(--muted);flex:none;margin-top:1px;
+    display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700}
+  .single .box{border-radius:50%}
+  .multi .box{border-radius:5px}
+  .opt.selected .box{border-color:var(--accent2);color:var(--accent2)}
+  .opt.correct .box{border-color:var(--green);color:var(--green)}
+  .opt.wrong .box{border-color:var(--red);color:var(--red)}
+  textarea{width:100%;background:var(--card2);border:1px solid var(--border);color:var(--text);
+    border-radius:9px;padding:10px 12px;font-size:.9rem;font-family:inherit;resize:vertical;min-height:70px;margin-top:8px}
+  textarea:focus{outline:none;border-color:var(--accent2)}
+  .hint{font-size:.78rem;color:var(--muted);margin-top:6px}
+  .actions{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+  .feedback{margin-top:12px;padding:11px 14px;border-radius:9px;font-size:.9rem;display:none}
+  .feedback.show{display:block}
+  .feedback.ok{background:var(--greenbg);border:1px solid var(--green)}
+  .feedback.no{background:var(--redbg);border:1px solid var(--red)}
+  .feedback.model{background:var(--amberbg);border:1px solid var(--amber)}
+  .feedback b{display:block;margin-bottom:3px}
+  .selfmark{margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.85rem}
+  .selfmark button{border:1px solid var(--border);background:var(--card2);color:var(--text);
+    border-radius:7px;padding:6px 12px;cursor:pointer;font-weight:600}
+  .selfmark button.got:hover{border-color:var(--green)}
+  .selfmark button.miss:hover{border-color:var(--red)}
+  .selfmark button.active-got{background:var(--greenbg);border-color:var(--green)}
+  .selfmark button.active-miss{background:var(--redbg);border-color:var(--red)}
+  .kw{display:inline-block;background:#1c2540;border:1px solid var(--border);border-radius:20px;
+    padding:1px 9px;margin:2px 4px 2px 0;font-size:.8rem}
+  footer{text-align:center;color:var(--muted);font-size:.8rem;margin-top:20px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>INF2001 — Introduction to Software Engineering</h1>
+    <div class="sub">Self-marking practice quiz · Weeks 1–5 · 51 questions (30 MCQ · 14 short answer · 7 open-ended)</div>
+    <div class="legend">
+      <span><span class="dot" style="background:#4361ee"></span> MCQ (auto-graded)</span>
+      <span><span class="dot" style="background:#f4a261"></span> Short answer (self-mark)</span>
+      <span><span class="dot" style="background:#7b5ea7"></span> Open-ended (self-mark)</span>
+    </div>
+  </header>
+
+  <div class="bar">
+    <div class="score">MCQ: <span id="mcqScore">0</span>/<span id="mcqTotal">0</span> correct ·
+      Written self-marked: <span id="writtenScore">0</span>/<span id="writtenTotal">0</span></div>
+    <div style="display:flex;gap:10px">
+      <button class="btn secondary" id="revealAll">Reveal all</button>
+      <button class="btn secondary" id="reset">Reset</button>
+    </div>
+  </div>
+
+  <div id="quiz"></div>
+
+  <footer>MCQ = round/square buttons, click then Check. Short/Open = type your answer, then click "Show model answer" and honestly self-mark ✓/✗.</footer>
+</div>
+
+<script>
+/* Question schema:
+   type: "mcq-single" | "mcq-multi" | "short" | "open"
+   w: week label
+   q: question text
+   MCQ: options[], correct[] (indexes), explain
+   short/open: model (model answer text), keywords[] (optional), explain (optional)
+*/
+const QUESTIONS = [
+  // ================= WEEK 1 =================
+  {w:"Week 1", type:"mcq-single",
+   q:"The IEEE defines software engineering as the application of a systematic, disciplined, quantifiable approach to the development, operation and maintenance of software. This mainly emphasises that SE is:",
+   options:["Just writing code efficiently","A structured, measurable engineering discipline — not just coding","Using the newest technology","Only about testing"],
+   correct:[1],
+   explain:"The definition stresses a systematic, disciplined, quantifiable approach — 'it's not just coding'."},
+
+  {w:"Week 1", type:"mcq-multi",
+   q:"Which were MAJOR complaints about software in 1968 (birth of 'software engineering')? Select ALL that apply.",
+   options:["Projects over-time","Projects over-budget","Software delivered too early","Software often did not meet requirements","Software was of low quality"],
+   correct:[0,1,3,4],
+   explain:"1968 complaints: over-time, over-budget, unmanageable/hard to maintain, low quality, inefficient, didn't meet requirements, sometimes never delivered."},
+
+  {w:"Week 1", type:"mcq-single",
+   q:"Roughly what percentage of total software cost is attributed to maintenance?",
+   options:["7%","33%","50%","67%"],
+   correct:[3],
+   explain:"Maintenance ≈ 67% of total cost, so we design with maintenance in mind."},
+
+  {w:"Week 1", type:"short",
+   q:"Name the THREE main categories of post-delivery maintenance.",
+   model:"Corrective, Perfective, and Adaptive maintenance. (Perfective ~60%, Corrective ~20%, Adaptive ~20%.)",
+   keywords:["corrective","perfective","adaptive"],
+   explain:"Perfective and adaptive together are the 'enhancement' types."},
+
+  {w:"Week 1", type:"short",
+   q:"State ONE key strength and ONE key weakness of the Waterfall model.",
+   model:"Strength (any): easy to understand due to simple linear structure and clearly defined stages; good structure for inexperienced staff; facilitates project management; defines goals/deliverables early. Weakness (any): success depends on precise requirements; no working software until the end; high risk/uncertainty; very hard to change in later stages; not realistic; expensive.",
+   keywords:["easy","structure","precise","no working","late","change","risk","expensive"],
+   explain:"Waterfall is simple and manageable but rigid and risky when requirements change."},
+
+  {w:"Week 1", type:"mcq-single",
+   q:"In Rapid Prototyping, the prototype may replace the specification phase but should NEVER replace which phase?",
+   options:["Design phase","Testing phase","Requirements phase","Deployment phase"],
+   correct:[0],
+   explain:"Rapid prototyping may replace specification — never the design phase; and never turn the prototype into the product."},
+
+  {w:"Week 1", type:"mcq-single",
+   q:"Which model places strong emphasis on RISK ANALYSIS in every iteration, with radius representing accumulated cost?",
+   options:["Waterfall","Rapid Prototyping","Spiral","RUP"],
+   correct:[2],
+   explain:"The Spiral model emphasises risk analysis; the radius reflects accumulated cost."},
+
+  {w:"Week 1", type:"mcq-multi",
+   q:"Which are the four phases of the Rational Unified Process (RUP)? Select ALL that apply.",
+   options:["Inception","Elaboration","Construction","Verification","Transition"],
+   correct:[0,1,2,4],
+   explain:"RUP phases: Inception, Elaboration, Construction, Transition."},
+
+  {w:"Week 1", type:"mcq-multi",
+   q:"Per the Agile Manifesto, which items are valued MORE (left side)? Select ALL that apply.",
+   options:["Individuals and interactions","Comprehensive documentation","Working software","Customer collaboration","Responding to change"],
+   correct:[0,2,3,4],
+   explain:"Agile values individuals/interactions, working software, customer collaboration and responding to change more; comprehensive documentation is on the right."},
+
+  {w:"Week 1", type:"open",
+   q:"Explain WHY finding and fixing a fault early in the life cycle is much cheaper than fixing it late. (Give the reasoning.)",
+   model:"Early (e.g., requirements/analysis): usually only a document needs changing, so the relative cost is very low (≈1). Late (e.g., post-delivery): you must change code AND documentation, test the change, perform regression testing, and reinstall on the client's computers — the relative cost balloons (up to hundreds of times, e.g., ~368 in the IBM AS/400 data). Because maintenance dominates total cost, catching faults early reduces both the number of faults and overall cost.",
+   keywords:["document","code","regression testing","reinstall","relative cost","maintenance"],
+   explain:"The cost-to-fix curve rises steeply across phases."},
+
+  {w:"Week 1", type:"open",
+   q:"Compare Waterfall vs Agile in terms of handling changing requirements, and state when each is appropriate.",
+   model:"Waterfall is sequential and document-driven (BDUF); it assumes requirements are precise and stable and is very hard/expensive to change late — best for well-understood requirements, known technology, small/simple, low-risk or heavily regulated projects. Agile embraces change as a fact of life via short incremental deliveries (1–4 weeks), continuous feedback and light-weight documentation — best when requirements are uncertain/likely to change, technology is new, or time-critical small-to-medium projects, but needs a skilled, trusting team and good automation.",
+   keywords:["sequential","precise","change","incremental","feedback","uncertain","team"],
+   explain:"Waterfall = stability/predictability; Agile = adaptability."},
+
+  // ================= WEEK 2 =================
+  {w:"Week 2", type:"mcq-single",
+   q:"What is the 'moving target' problem?",
+   options:["Developers keep switching languages","Requirements change while the product is being developed","The client is unavailable","Testing takes too long"],
+   correct:[1],
+   explain:"A change in requirements during development, which can cause regression faults."},
+
+  {w:"Week 2", type:"mcq-multi",
+   q:"Which are the four activities of Requirements Engineering? Select ALL that apply.",
+   options:["Elicitation","Analysis","Validation","Compilation","Management"],
+   correct:[0,1,2,4],
+   explain:"Elicitation, Analysis, Validation, Management."},
+
+  {w:"Week 2", type:"short",
+   q:"How does requirements ELICITATION differ from requirements 'gathering'?",
+   model:"Elicitation actively focuses on what the user NEEDS (an ethical duty), not just what they say they want; it focuses on the problem, not the technical solution, and involves actively interacting with stakeholders to extract requirements.",
+   keywords:["need","want","problem","not solution","stakeholder","ethical"],
+   explain:"Elicitation = discovery of true needs, not just wants."},
+
+  {w:"Week 2", type:"short",
+   q:"Give TWO requirements-discovery methods and one advantage of each.",
+   model:"Any two of: Interviews (deep, context-specific insight; clarify vagueness immediately). Focus groups (fast diverse views; reveals consensus/conflict). Observation (reveals real practices/workarounds, not just what people say). Prototyping (makes abstract requirements concrete). Questionnaires (reach many people quickly/cheaply, quantifiable). Documents (objective written evidence). Scenarios (relatable, uncover exceptions/edge cases).",
+   keywords:["interview","focus group","observation","prototyp","questionnaire","document","scenario"],
+   explain:"Techniques can be blended for better coverage."},
+
+  {w:"Week 2", type:"mcq-single",
+   q:"The effect where people change their behaviour because they know they're being observed is called the:",
+   options:["Groupthink effect","Hawthorne effect","Halo effect","Placebo effect"],
+   correct:[1],
+   explain:"The Hawthorne effect."},
+
+  {w:"Week 2", type:"mcq-single",
+   q:"Functional requirements describe the ___ while non-functional requirements describe ___.",
+   options:["'how well'; the 'what'","'what' (tasks/actions); the 'how well' (quality/constraints)","cost; schedule","hardware; software"],
+   correct:[1],
+   explain:"Functional = 'what'; non-functional = 'how well' (quality attributes & design constraints)."},
+
+  {w:"Week 2", type:"short",
+   q:"Rewrite this poor requirement to make it VERIFIABLE: 'The system should be easy to use by medical staff.'",
+   model:"e.g., 'Medical staff shall be able to use all system functions after four hours of training; after this training, the average number of errors made by experienced users shall not exceed two per hour of system use.' (Any answer that adds measurable, testable criteria is acceptable.)",
+   keywords:["measurable","number","hours","errors","training","testable"],
+   explain:"Good requirements are specific and quantifiable so they can be tested."},
+
+  {w:"Week 2", type:"mcq-multi",
+   q:"Which qualities make a requirement 'good'? Select ALL that apply.",
+   options:["Verifiable","Ambiguous","Traceable","Consistent","Implementation-free"],
+   correct:[0,2,3,4],
+   explain:"Good = verifiable, clear/concise, traceable, viable, consistent, implementation-free, complete."},
+
+  {w:"Week 2", type:"mcq-single",
+   q:"In MoSCoW prioritisation the four categories are Must-have, Should-have, Could-have and:",
+   options:["Would-have","Will-not-have","May-have","Might-have"],
+   correct:[1],
+   explain:"MoSCoW = Must, Should, Could, Will-not-have."},
+
+  {w:"Week 2", type:"short",
+   q:"List the four formats used to specify requirements.",
+   model:"Natural language; Structured natural language (e.g., form-based); Mathematical/formal specifications; Graphical notations (e.g., UML use case & sequence diagrams).",
+   keywords:["natural language","structured","formal","mathematical","graphical"],
+   explain:"Each trades off readability vs precision."},
+
+  {w:"Week 2", type:"open",
+   q:"What is an SRS (Software Requirements Specification), and list at least four characteristics of a GOOD SRS (IEEE).",
+   model:"An SRS is a formal document capturing the complete description of a system's requirements (what it should do and constraints), serving as an agreement between stakeholders and a reference for design, implementation and testing. Good SRS characteristics: Correct, Unambiguous, Complete, Consistent, Verifiable, Modifiable, Traceable.",
+   keywords:["correct","unambiguous","complete","consistent","verifiable","modifiable","traceable","agreement"],
+   explain:"The SRS reduces misunderstandings and scope creep."},
+
+  {w:"Week 2", type:"mcq-single",
+   q:"Requirements Validation primarily answers:",
+   options:["Are we building the product right?","Are we building the RIGHT product?","How much will it cost?","Which language to use?"],
+   correct:[1],
+   explain:"Validation asks 'Are we building the RIGHT product?'"},
+
+  // ================= WEEK 3 =================
+  {w:"Week 3", type:"mcq-single",
+   q:"A use case primarily focuses on which type of requirement?",
+   options:["Non-functional","Functional (what the system should do)","Hardware","Budget"],
+   correct:[1],
+   explain:"Use cases capture functional requirements — how an actor interacts to achieve a goal."},
+
+  {w:"Week 3", type:"short",
+   q:"Define 'actor' and distinguish between a PRIMARY and a SUPPORTING actor.",
+   model:"An actor is anything (person, hardware, or another system) outside the software that interacts with it. A primary actor initiates the interaction to achieve a goal; a supporting actor performs sub-goals within the use case (e.g., a banking database queried by the ATM).",
+   keywords:["initiate","primary","support","sub-goal","outside","system"],
+   explain:"Actors need not be human."},
+
+  {w:"Week 3", type:"mcq-single",
+   q:"In the exercise (e.g. 'DB response time < 2s', 'uptime 99.8%'), which should be represented directly in a use case?",
+   options:["All of them","Only response time","NONE — they are all non-functional","Only uptime"],
+   correct:[2],
+   explain:"NONE — those are non-functional requirements."},
+
+  {w:"Week 3", type:"short",
+   q:"Explain the difference between the <<include>> and <<extend>> use case relationships.",
+   model:"<<include>> is a MANDATORY relationship: the base use case always integrates the included behaviour (e.g., Check Balance always includes Validate PIN), often used for reuse across multiple use cases. <<extend>> is OPTIONAL/conditional: the extending use case adds behaviour to the base only under specific conditions (note the arrow points to the base).",
+   keywords:["include","mandatory","always","extend","optional","condition","reuse"],
+   explain:"Include = always; Extend = sometimes."},
+
+  {w:"Week 3", type:"mcq-multi",
+   q:"A GOOD use case should... Select ALL that apply.",
+   options:["Focus on interaction","Describe internal system activities in detail","Describe the GUI in detail","Be concise and accessible to non-programmers","Focus on essential behaviours from the actor's view"],
+   correct:[0,3,4],
+   explain:"Good use cases focus on interaction/essential behaviour and are concise; they do NOT detail internal activities or the GUI."},
+
+  {w:"Week 3", type:"mcq-single",
+   q:"Activity diagrams are MOST useful for modelling:",
+   options:["Static class structure","Workflow / process behaviour (forks, joins, branches)","Database schema","Network topology"],
+   correct:[1],
+   explain:"They model workflow behaviour — decisions, iterations, parallel/random behaviour."},
+
+  {w:"Week 3", type:"short",
+   q:"In an activity diagram, what is the difference between a FORK and a DECISION (branch)?",
+   model:"A fork splits the flow into parallel activities that happen simultaneously (later re-synchronised by a join) — shown as a thick bar. A decision/branch (diamond) chooses ONE of several paths based on guard conditions — it is conditional, not parallel.",
+   keywords:["fork","parallel","join","decision","branch","diamond","condition"],
+   explain:"Fork = parallelism; decision = choice."},
+
+  {w:"Week 3", type:"open",
+   q:"State one main advantage and one disadvantage of activity diagrams during requirements analysis.",
+   model:"Advantage: they model and clarify the workflow/process behaviour, are useful early to understand the overall process, and can document existing processes, analyse new concepts and find re-engineering opportunities. Disadvantage: they do not explicitly show WHICH objects execute which activities or how messaging works between them (though activities can be labelled with responsible objects).",
+   keywords:["workflow","process","early","objects","messaging","which"],
+   explain:"Great for process flow, weak on object responsibility."},
+
+  // ================= WEEK 4 =================
+  {w:"Week 4", type:"mcq-single",
+   q:"In UML class notation, what does the '-' visibility symbol mean?",
+   options:["Public","Private","Protected","Package-private"],
+   correct:[1],
+   explain:"'-' private, '+' public, '#' protected."},
+
+  {w:"Week 4", type:"mcq-multi",
+   q:"Which are principles of Object-Oriented Design? Select ALL that apply.",
+   options:["Encapsulation","Information hiding","Inheritance","Polymorphism","Recursion"],
+   correct:[0,1,2,3],
+   explain:"Encapsulation & information hiding (HIDE); Inheritance & polymorphism (EXTEND)."},
+
+  {w:"Week 4", type:"short",
+   q:"Define inheritance and polymorphism in one line each.",
+   model:"Inheritance: enables reuse of higher-level (superclass) specifications among more detailed subclass implementations (an 'is-a' relationship). Polymorphism: enables multiple implementations to handle the same message in different ways, transparently to the client (e.g., speak() → meow/woof/quack).",
+   keywords:["inheritance","reuse","superclass","subclass","is-a","polymorphism","same message","different"],
+   explain:"Inheritance = reuse; polymorphism = same call, different behaviour."},
+
+  {w:"Week 4", type:"short",
+   q:"List the four steps to derive classes from a use case.",
+   model:"Step 1: Write a solution abstract. Step 2: Identify/filter the NOUNS to extract entity classes. Step 3: Determine attributes and services (methods) of the classes. Step 4: Derive relationships (e.g., inheritance/associations).",
+   keywords:["solution abstract","noun","entity","attribute","service","relationship"],
+   explain:"Nouns → classes; verbs → services."},
+
+  {w:"Week 4", type:"mcq-single",
+   q:"An 'is-a' relationship between entities typically indicates which mechanism?",
+   options:["Composition","Inheritance","Encapsulation","Association only"],
+   correct:[1],
+   explain:"'is-a' (Duck is-a Animal) → inheritance."},
+
+  {w:"Week 4", type:"short",
+   q:"Define encapsulation and information hiding, and give one benefit.",
+   model:"Encapsulation = grouping of data (attributes) and functions (operations) into one component. Information hiding = selectively hiding attributes/operations so internal state/behaviour is not directly accessible to external clients; access is regulated via the object's operations (constructor/mutator/accessor). Benefit: development focuses on WHAT services do, not HOW; increases maintainability, reuse and protects the existing structure.",
+   keywords:["group","data","function","hide","internal","access","what not how","maintain"],
+   explain:"Hide the 'how', expose the 'what'."},
+
+  {w:"Week 4", type:"mcq-single",
+   q:"In a sequence diagram, the VERTICAL axis represents:",
+   options:["Which participant is acting","Time (down = forward)","Cost","Message count"],
+   correct:[1],
+   explain:"Vertical = time; horizontal = participant."},
+
+  {w:"Week 4", type:"mcq-multi",
+   q:"Which frame/operators show selection & loops in a sequence diagram? Select ALL that apply.",
+   options:["opt (if)","alt (if/else)","loop","fork"],
+   correct:[0,1,2],
+   explain:"opt, alt, loop. 'fork' belongs to activity diagrams."},
+
+  {w:"Week 4", type:"open",
+   q:"Give two reasons why a team might draw a sequence diagram instead of just writing the code.",
+   model:"Any two: it is a bit above real-code level (not every line is drawn); language-agnostic (can be implemented in many languages); non-coders can read/participate; easier to do collaboratively as a team; high 'visual bandwidth' — you can see many objects/classes and their interactions on one page.",
+   keywords:["language","non-coder","team","visual","above code","communication"],
+   explain:"Diagrams aid communication and design before implementation."},
+
+  // ================= WEEK 5 =================
+  {w:"Week 5", type:"mcq-single",
+   q:"Per PMBOK, a project is:",
+   options:["An ongoing operation with no end","A temporary endeavour to create a unique product/service/result","Any coding activity","A permanent department"],
+   correct:[1],
+   explain:"Temporary endeavour → unique result."},
+
+  {w:"Week 5", type:"mcq-single",
+   q:"A Work Breakdown Structure (WBS) is best described as a:",
+   options:["Flat list of random tasks","Deliverable-oriented hierarchical decomposition of the work","Sequence diagram of code","Budget spreadsheet only"],
+   correct:[1],
+   explain:"Deliverable-oriented hierarchical decomposition of project work."},
+
+  {w:"Week 5", type:"short",
+   q:"What does the 'Cone of Uncertainty' tell us about estimates over a project's life?",
+   model:"Estimation accuracy improves (the range narrows) as the project progresses through its phases. Early (during requirements) an estimate has a very wide possible range (e.g., 0.25×–4×); by the end of analysis the range is much tighter (e.g., 0.67×–1.5×). Estimating techniques have improved but the curve shape is similar.",
+   keywords:["accuracy","narrow","range","phase","requirements","analysis","progress"],
+   explain:"Estimate later = more accurate."},
+
+  {w:"Week 5", type:"mcq-multi",
+   q:"Which are basic software SIZE metrics? Select ALL that apply.",
+   options:["Function Points (FP)","Use Case Points (UCP)","Lines of Code (LOC)","Gigabytes of RAM"],
+   correct:[0,1,2],
+   explain:"FP, UCP, LOC."},
+
+  {w:"Week 5", type:"mcq-single",
+   q:"TCF = 0.65 + 0.01 × DI. If total Degree of Influence = 27, then TCF =",
+   options:["0.65","0.92","1.27","27"],
+   correct:[1],
+   explain:"0.65 + 0.01×27 = 0.92."},
+
+  {w:"Week 5", type:"mcq-single",
+   q:"FP = UFP × TCF. If UFP = 50 and TCF = 0.92, then FP ≈",
+   options:["50","42","46","58"],
+   correct:[2],
+   explain:"50 × 0.92 = 46."},
+
+  {w:"Week 5", type:"short",
+   q:"In Use Case Points, what is a 'transaction', and how is a use case's complexity classified from it?",
+   model:"A transaction is a round-trip from User → System → User (not necessarily one numbered step; if user interaction is missing, System→User can count as one). Complexity: Simple ≤3 transactions (weight 5), Average 4–7 (weight 10), Complex >7 (weight 15).",
+   keywords:["round-trip","user","system","simple","average","complex","3","7","weight"],
+   explain:"Count transactions → weight the use case."},
+
+  {w:"Week 5", type:"mcq-single",
+   q:"COCOMO's MAJOR input parameter for estimating effort is:",
+   options:["Number of meetings","Size (e.g., LOC or UCP)","Team salary","Language only"],
+   correct:[1],
+   explain:"COCOMO (Boehm, 1981) uses size to predict effort in person-months/hours."},
+
+  {w:"Week 5", type:"mcq-single",
+   q:"Using D = (OD + 4×ED + PD) / 6, with Optimistic=2, Expected=5, Pessimistic=14, D =",
+   options:["5","6","7","4"],
+   correct:[1],
+   explain:"(2 + 20 + 14)/6 = 36/6 = 6."},
+
+  {w:"Week 5", type:"open",
+   q:"State two limitations of using Lines of Code (LOC) as a size/effort metric.",
+   model:"Any two: source code is only a small part of total effort (ignores requirements, design, testing, deployment); different languages produce different lengths; it's unclear what to count (executable lines? data definitions? comments? changed/deleted lines?); not everything written is delivered; generators can produce thousands of lines quickly; and LOC is accurately known only when the product is finished.",
+   keywords:["small part","language","count","comments","generator","delivered","finished"],
+   explain:"LOC is ambiguous and only fully known at the end."},
+
+  {w:"Week 5", type:"open",
+   q:"Explain how Use Case Points (UCP) are calculated at a high level (name the four ingredients).",
+   model:"UCP is a function of: (1) the number and complexity of the Use Cases (Unadjusted Use Case Weight from transactions) + (2) the number and complexity of the Actors, then multiplied by (3) the Technical Complexity Factor (non-functional requirements) and (4) the Environmental Factor (development environment — team experience, motivation, language difficulty, stable requirements, etc.). i.e. UCP = (UseCases + Actors) × TCF × EF.",
+   keywords:["use case","actor","technical complexity","environmental","TCF","EF","transaction"],
+   explain:"(UCW + Actors) × TCF × EF."}
+];
+
+const quizEl=document.getElementById('quiz');
+const mcqScoreEl=document.getElementById('mcqScore');
+const mcqTotalEl=document.getElementById('mcqTotal');
+const writtenScoreEl=document.getElementById('writtenScore');
+const writtenTotalEl=document.getElementById('writtenTotal');
+
+const isMcq=q=>q.type==='mcq-single'||q.type==='mcq-multi';
+const state=QUESTIONS.map(q=>({selected:new Set(),checked:false,gotIt:false,revealed:false,selfMark:null}));
+
+function typeMeta(t){
+  if(t==='mcq-single')return{cls:'mcq',badge:'MCQ · single',num:'mcq'};
+  if(t==='mcq-multi')return{cls:'mcq',badge:'MCQ · multi',num:'mcq'};
+  if(t==='short')return{cls:'short',badge:'Short answer',num:'short'};
+  return{cls:'open',badge:'Open-ended',num:'open'};
+}
+
+function render(){
+  quizEl.innerHTML='';
+  QUESTIONS.forEach((Q,qi)=>{
+    const meta=typeMeta(Q.type);
+    const card=document.createElement('div');card.className='q';
+    card.innerHTML=
+      `<div class="qhead">
+         <span class="qnum ${meta.num}">Q${qi+1}</span>
+         <span class="qtext">${Q.q}</span>
+         <span class="typebadge ${meta.cls}">${meta.badge}</span>
+         <span class="tag">${Q.w}</span>
+       </div>`;
+
+    if(isMcq(Q)){
+      const multi=Q.type==='mcq-multi';
+      if(multi)card.innerHTML+='<div class="multi-note">◻ Select ALL that apply</div>';
+      const wrap=document.createElement('div');wrap.className=multi?'multi':'single';
+      Q.options.forEach((opt,oi)=>{
+        const o=document.createElement('div');o.className='opt';
+        o.innerHTML=`<span class="box"></span><span>${opt}</span>`;
+        o.onclick=()=>{
+          if(state[qi].checked)return;
+          const s=state[qi].selected;
+          if(multi){s.has(oi)?s.delete(oi):s.add(oi);}else{s.clear();s.add(oi);}
+          [...wrap.children].forEach((c,ci)=>c.classList.toggle('selected',s.has(ci)));
+        };
+        wrap.appendChild(o);
+      });
+      card.appendChild(wrap);
+      const act=document.createElement('div');act.className='actions';
+      const b=document.createElement('button');b.className='btn';b.textContent='Check answer';
+      b.onclick=()=>checkMcq(qi);act.appendChild(b);card.appendChild(act);
+      const fb=document.createElement('div');fb.className='feedback';fb.id='fb-'+qi;card.appendChild(fb);
+    } else {
+      const ta=document.createElement('textarea');
+      ta.placeholder='Type your answer here (then reveal the model answer to self-mark)…';
+      ta.id='ta-'+qi;card.appendChild(ta);
+      const act=document.createElement('div');act.className='actions';
+      const b=document.createElement('button');b.className='btn';b.textContent='Show model answer';
+      b.onclick=()=>revealModel(qi);act.appendChild(b);card.appendChild(act);
+      const fb=document.createElement('div');fb.className='feedback';fb.id='fb-'+qi;card.appendChild(fb);
+    }
+    quizEl.appendChild(card);
+  });
+  mcqTotalEl.textContent=QUESTIONS.filter(isMcq).length;
+  writtenTotalEl.textContent=QUESTIONS.filter(q=>!isMcq(q)).length;
+  updateScore();
+}
+
+function arraysEqualSet(set,arr){if(set.size!==arr.length)return false;return arr.every(x=>set.has(x));}
+
+function checkMcq(qi){
+  const Q=QUESTIONS[qi],st=state[qi];
+  if(st.selected.size===0)return;
+  st.checked=true;
+  const correct=new Set(Q.correct);
+  const card=quizEl.children[qi];
+  card.querySelectorAll('.opt').forEach((o,oi)=>{
+    o.classList.remove('selected');
+    if(correct.has(oi))o.classList.add('correct');
+    else if(st.selected.has(oi))o.classList.add('wrong');
+    o.querySelector('.box').textContent=correct.has(oi)?'✓':(st.selected.has(oi)?'✗':'');
+  });
+  st.gotIt=arraysEqualSet(st.selected,Q.correct);
+  card.querySelector('.btn').disabled=true;
+  const fb=document.getElementById('fb-'+qi);
+  fb.className='feedback show '+(st.gotIt?'ok':'no');
+  fb.innerHTML=`<b>${st.gotIt?'✅ Correct!':'❌ Not quite.'}</b>${Q.explain||''}`;
+  updateScore();
+}
+
+function revealModel(qi){
+  const Q=QUESTIONS[qi],st=state[qi];
+  st.revealed=true;
+  const card=quizEl.children[qi];
+  card.querySelector('.btn').disabled=true;
+  const fb=document.getElementById('fb-'+qi);
+  let kw='';
+  if(Q.keywords&&Q.keywords.length){
+    kw='<div style="margin-top:8px"><b style="display:inline">Look for these keywords:</b> '+
+       Q.keywords.map(k=>`<span class="kw">${k}</span>`).join('')+'</div>';
+  }
+  fb.className='feedback show model';
+  fb.innerHTML=`<b>📝 Model answer</b>${Q.model}${kw}`+
+    `<div class="selfmark"><span>Mark yourself:</span>
+       <button class="got" onclick="selfMark(${qi},true)">✓ I got it</button>
+       <button class="miss" onclick="selfMark(${qi},false)">✗ Missed it</button></div>`;
+}
+
+function selfMark(qi,got){
+  state[qi].selfMark=got;
+  const fb=document.getElementById('fb-'+qi);
+  const btns=fb.querySelectorAll('.selfmark button');
+  btns[0].classList.toggle('active-got',got);
+  btns[1].classList.toggle('active-miss',!got);
+  updateScore();
+}
+
+function updateScore(){
+  const mcqRight=state.filter((s,i)=>isMcq(QUESTIONS[i])&&s.gotIt).length;
+  const written=state.filter((s,i)=>!isMcq(QUESTIONS[i])&&s.selfMark===true).length;
+  mcqScoreEl.textContent=mcqRight;
+  writtenScoreEl.textContent=written;
+}
+
+document.getElementById('revealAll').onclick=()=>{
+  QUESTIONS.forEach((Q,qi)=>{
+    if(isMcq(Q)){ if(!state[qi].checked){state[qi].selected=new Set(Q.correct);checkMcq(qi);} }
+    else { if(!state[qi].revealed)revealModel(qi); }
+  });
+};
+document.getElementById('reset').onclick=()=>{
+  state.forEach(s=>{s.selected=new Set();s.checked=false;s.gotIt=false;s.revealed=false;s.selfMark=null;});
+  render();window.scrollTo({top:0,behavior:'smooth'});
+};
+
+render();
+</script>
+</body>
+</html>
